@@ -1,0 +1,52 @@
+{
+    "10B1": {
+        "I": 1.64e-6,
+        "h": 0.100,
+        "critical_stress": 250e6
+    },
+    "12B1": {
+        "I": 2.88e-6,
+        "h": 0.120,
+        "critical_stress": 250e6
+    },
+    "14B1": {
+        "I": 4.89e-6,
+        "h": 0.140,
+        "critical_stress": 250e6
+    },
+    "16B1": {
+        "I": 8.00e-6,
+        "h": 0.160,
+        "critical_stress": 250e6
+    },
+    "18B1": {
+        "I": 12.3e-6,
+        "h": 0.180,
+        "critical_stress": 250e6
+    },
+    "20B1": {
+        "I": 18.1e-6,
+        "h": 0.200,
+        "critical_stress": 250e6
+    },
+    "22B1": {
+        "I": 26.0e-6,
+        "h": 0.220,
+        "critical_stress": 250e6
+    },
+    "25B1": {
+        "I": 38.1e-6,
+        "h": 0.250,
+        "critical_stress": 250e6
+    },
+    "30B1": {
+        "I": 68.2e-6,
+        "h": 0.300,
+        "critical_stress": 250e6
+    },
+    "35B1": {
+        "I": 115e-6,
+        "h": 0.350,
+        "critical_stress": 250e6
+    }
+}
