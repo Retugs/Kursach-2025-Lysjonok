@@ -1,13 +1,24 @@
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
-from PySide6.QtGui import QFont, QColor, QPalette
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow
+from PySide6.QtGui import QFont
 from gui.auto_mode_window import AutoModeWindow
 from PySide6.QtCore import Qt
 from gui.main_window import MainWindow
+from data.visualisation import FractalWidget
+
+class ReverseModeWindow(QMainWindow):
+    """Окно для отображения фрактала в полноэкранном режиме"""
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Обратный режим")
+        self.fractal = FractalWidget()
+        self.setCentralWidget(self.fractal)
+        self.showFullScreen()
 
 
 class MainMenu(QWidget):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Главное Меню")
         self.setGeometry(1000, 500, 400, 300)
         self.setStyleSheet("background-color: #2b2b2b; color: #ffffff;")
@@ -63,11 +74,8 @@ class MainMenu(QWidget):
         self.close()
 
     def load_reverse_mode(self):
-        print("Обратный режим (пока заглушка)")
+        self.reverse_window = ReverseModeWindow()
+        self.reverse_window.show()
+        self.hide()
 
 
-if __name__ == "__main__":
-    app = QApplication([])
-    main_menu = MainMenu()
-    main_menu.show()
-    app.exec()
