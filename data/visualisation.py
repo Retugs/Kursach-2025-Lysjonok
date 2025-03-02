@@ -18,18 +18,18 @@ from numba import jit
 
 
 class FractalWidget(QWidget):
-    def __init__(self, palette=1, parent=None):
+    def __init__(self, palette=8, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
 
         # Параметры анимации (НАСТРОЙКИ СКОРОСТИ ЗДЕСЬ)
-        self.animation_speed = 0.2  # Множитель скорости (0.1-1.0)
+        self.animation_speed = 0.1  # Множитель скорости (0.1-1.0)
 
         # Основные параметры
         self._width = 800
         self._height = 600
         self.max_iter = 120
-        self.update_interval = 10  # Интервал обновления в ms
+        self.update_interval = 5  # Интервал обновления в ms
 
         # Параметры преобразований
         self.zoom = 10.0
@@ -151,7 +151,7 @@ class ReverseModeWindow(QMainWindow):
         self.setWindowTitle("Обратный режим")
 
         # Для смены палитры измените число (0-8) ↓
-        self.fractal_widget = FractalWidget(palette=6)  # 2 = пастель по умолчанию
+        self.fractal_widget = FractalWidget(palette=8)  # 2 = пастель по умолчанию
 
         self.setCentralWidget(self.fractal_widget)
         self.showFullScreen()
