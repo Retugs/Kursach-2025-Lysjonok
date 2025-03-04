@@ -6,18 +6,14 @@ class PlotWidget(QWidget):
     def __init__(self, parent=None):
         super(PlotWidget, self).__init__(parent)
 
-        # Создаем фигуру matplotlib
         self.figure, self.axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
         self.canvas = FigureCanvas(self.figure)
-
-        # Настройка осей
         self.axes[0].set_title("")
         self.axes[1].set_title("")
         self.axes[2].set_title("")
         for ax in self.axes:
             ax.grid(True)
 
-        # Layout для виджета
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
 
@@ -25,7 +21,6 @@ class PlotWidget(QWidget):
         for ax in self.axes:
             ax.clear()
 
-        # График моментов
         if 'moment_diagram' in data:
             x_moment, moments = data['moment_diagram']
             ax_moment = self.axes[0]
@@ -37,7 +32,6 @@ class PlotWidget(QWidget):
             ax_moment.axhline(0, color='black', linewidth=2.5, alpha=0.9)  # Жирная ось y=0
             ax_moment.legend(fontsize=10, loc='best')  # Легенда
 
-        # График прогибов
         if 'deflections' in data:
             x_defl, deflections = data['deflections']
             ax_defl = self.axes[1]
@@ -49,7 +43,6 @@ class PlotWidget(QWidget):
             ax_defl.axhline(0, color='black', linewidth=2.5, alpha=0.9)
             ax_defl.legend(fontsize=10, loc='best')
 
-        # График поперечных сил
         if 'transverse_forces' in data:
             x_trans, transverse = data['transverse_forces']
             ax_trans = self.axes[2]
@@ -62,5 +55,4 @@ class PlotWidget(QWidget):
             ax_trans.axhline(0, color='black', linewidth=2.5, alpha=0.9)
             ax_trans.legend(fontsize=10, loc='best')
 
-        # Обновляем канвас для отображения изменений
         self.canvas.draw()

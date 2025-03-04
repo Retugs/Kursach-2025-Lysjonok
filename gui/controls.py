@@ -12,13 +12,11 @@ class ControlPanel(QWidget):
 
         layout = QFormLayout(self)
 
-        # Выбор профиля балки (САМЫЙ ВЕРХ)
         self.loader = BeamLoader('data/profiles.json')
         self.profile_combo = QComboBox()
         self.profile_combo.addItems(self.loader.profiles.keys())
         layout.addRow("Профиль:", self.profile_combo)
 
-        # ---- Ползунки нагрузки ----
         self.force_value_slider = QSlider(Qt.Horizontal)
         self.force_value_slider.setRange(-10000, 10000)
         self.force_value_slider.setValue(0)
@@ -39,7 +37,6 @@ class ControlPanel(QWidget):
         position_layout.addWidget(self.position_label)
         layout.addRow("Положение нагрузки:", position_layout)
 
-        # ---- Кнопки нагрузки ----
         load_buttons_layout = QHBoxLayout()
         self.add_load_button = QPushButton("Добавить нагрузку")
         self.remove_load_button = QPushButton("Удалить нагрузку")
@@ -47,7 +44,6 @@ class ControlPanel(QWidget):
         load_buttons_layout.addWidget(self.remove_load_button)
         layout.addRow(load_buttons_layout)
 
-        # ---- Ползунки момента ----
         self.moment_value_slider = QSlider(Qt.Horizontal)
         self.moment_value_slider.setRange(-10000, 10000)
         self.moment_value_slider.setValue(0)
@@ -68,7 +64,6 @@ class ControlPanel(QWidget):
         moment_position_layout.addWidget(self.moment_position_label)
         layout.addRow("Положение момента:", moment_position_layout)
 
-        # ---- Кнопки момента ----
         moment_buttons_layout = QHBoxLayout()
         self.add_moment_button = QPushButton("Добавить момент")
         self.remove_moment_button = QPushButton("Удалить момент")
@@ -76,11 +71,9 @@ class ControlPanel(QWidget):
         moment_buttons_layout.addWidget(self.remove_moment_button)
         layout.addRow(moment_buttons_layout)
 
-        # ---- Отступ перед кнопкой "НЕ НАЖИМАТЬ!!!" ----
         layout.addItem(QSpacerItem(0, 15, QSizePolicy.Minimum, QSizePolicy.Fixed))
 
-        # ---- Кнопка "НЕ НАЖИМАТЬ!!!" ----
-        self.create_w1djet = QPushButton("Для отдыха")
+        self.create_w1djet = QPushButton("-------------")
         layout.addRow(self.create_w1djet)
 
         self.forces = []

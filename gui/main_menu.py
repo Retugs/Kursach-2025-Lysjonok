@@ -4,9 +4,9 @@ from gui.auto_mode_window import AutoModeWindow
 from PySide6.QtCore import Qt
 from gui.main_window import MainWindow
 from data.visualisation import FractalWidget
+from gui.reverse_problem_widget import BeamApp
 
 class ReverseModeWindow(QMainWindow):
-    """Окно для отображения фрактала в полноэкранном режиме"""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Обратный режим")
@@ -20,7 +20,7 @@ class MainMenu(QWidget):
         super().__init__()
 
         self.setWindowTitle("Главное Меню")
-        self.setGeometry(1000, 500, 400, 300)
+        self.setGeometry(500, 300, 400, 300)
         self.setStyleSheet("background-color: #2b2b2b; color: #ffffff;")
 
         layout = QVBoxLayout()
@@ -33,11 +33,14 @@ class MainMenu(QWidget):
         self.manual_button = self.create_button("Ручной режим", self.load_manual_mode)
         self.auto_button = self.create_button("Автоматический режим", self.load_auto_mode)
         self.reverse_button = self.create_button("Обратный режим", self.load_reverse_mode)
+        self.visualization = self.create_button("--------------", self.visualize)
+
 
         layout.addWidget(title)
         layout.addWidget(self.manual_button)
         layout.addWidget(self.auto_button)
         layout.addWidget(self.reverse_button)
+        layout.addWidget(self.visualization)
         layout.addStretch()
 
         self.setLayout(layout)
@@ -74,8 +77,13 @@ class MainMenu(QWidget):
         self.close()
 
     def load_reverse_mode(self):
-        self.reverse_window = ReverseModeWindow()
+        self.reverse_window = BeamApp()
         self.reverse_window.show()
+        self.hide()
+
+    def visualize(self):
+        self.window = FractalWidget()
+        self.window.show()
         self.hide()
 
 

@@ -16,28 +16,23 @@ from numba import jit
 8 - Чёрно-белый
 """
 
-
 class FractalWidget(QWidget):
     def __init__(self, palette=8, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
 
-        # Параметры анимации (НАСТРОЙКИ СКОРОСТИ ЗДЕСЬ)
-        self.animation_speed = 0.1  # Множитель скорости (0.1-1.0)
+        self.animation_speed = 0.1
 
-        # Основные параметры
         self._width = 800
         self._height = 600
         self.max_iter = 120
-        self.update_interval = 5  # Интервал обновления в ms
+        self.update_interval = 5
 
-        # Параметры преобразований
         self.zoom = 10.0
         self.angle = 0.0
         self.hue_offset = 0.0
         self.palette = palette
 
-        # Инициализация данных
         self.color_map = np.zeros((self.max_iter, 3), dtype=np.uint8)
         self.fractal = self._generate_julia(
             self._width,
@@ -71,7 +66,6 @@ class FractalWidget(QWidget):
         return fractal
 
     def update_color_map(self):
-        """Выбор палитры через номер (0-8) в self.palette"""
         for i in range(self.max_iter):
             t = i / self.max_iter
             if self.palette == 0:  # Синие оттенки
@@ -107,10 +101,9 @@ class FractalWidget(QWidget):
                 self.color_map[i] = (intensity, intensity, intensity)
 
     def update_fractal(self):
-        # Плавные изменения параметров (основные настройки скорости)
-        self.angle += 0.005 * self.animation_speed  # Было 0.01
-        self.zoom = 1.0 + 0.1 * np.sin(self.angle / 5)  # Было 0.15 и /4
-        self.hue_offset += 0.002 * self.animation_speed  # Было 0.005
+        self.angle += 0.005 * self.animation_speed
+        self.zoom = 1.0 + 0.1 * np.sin(self.angle / 5)
+        self.hue_offset += 0.002 * self.animation_speed
 
         self.fractal = self._generate_julia(
             self._width,
@@ -150,8 +143,7 @@ class ReverseModeWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Обратный режим")
 
-        # Для смены палитры измените число (0-8) ↓
-        self.fractal_widget = FractalWidget(palette=8)  # 2 = пастель по умолчанию
+        self.fractal_widget = FractalWidget(palette=8)
 
         self.setCentralWidget(self.fractal_widget)
         self.showFullScreen()
@@ -161,7 +153,6 @@ class ReverseModeWindow(QMainWindow):
             self.close()
 
     def set_palette(self, palette):
-        """Явная установка палитры с принудительным обновлением"""
         self.palette = palette
         self.update_color_map()
         self.update()

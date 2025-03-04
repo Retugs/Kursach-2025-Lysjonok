@@ -14,53 +14,38 @@ class MainWindow(QMainWindow):
 
         QLocale.setDefault(QLocale(QLocale.Russian, QLocale.Russia))
 
-        # Создаем центральный виджет и главный layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-
-        # Главный горизонтальный разделитель (левая и правая части)
         main_splitter = QSplitter(Qt.Horizontal)
 
-        # Левая часть - вертикальный layout
         left_layout_widget = QWidget()
         left_layout = QVBoxLayout(left_layout_widget)
 
-        # Добавляем новый виджет W1djet внизу слева (изначально скрытый)
         self.w1djet = W1djet()
-        self.w1djet.setVisible(False)  # Скрываем виджет при старте
+        self.w1djet.setVisible(False)
 
-        # Панель управления, передаём W1djet внутрь
         self.control_panel = ControlPanel(self.w1djet)
         left_layout.addWidget(self.control_panel)
         left_layout.addWidget(self.w1djet)
 
-        # Правая часть - вертикальный разделитель (балка + графики)
         right_splitter = QSplitter(Qt.Vertical)
         self.beam_vis_widget = BeamVisualizationWidget()
         self.plot_widget = PlotWidget()
 
-        # Добавляем виджеты в правый вертикальный разделитель
         right_splitter.addWidget(self.beam_vis_widget)
         right_splitter.addWidget(self.plot_widget)
 
-        # Настройка пропорций для правого разделителя
         right_splitter.setSizes([250, 350])
-
-        # Собираем главный разделитель
         main_splitter.addWidget(left_layout_widget)
         main_splitter.addWidget(right_splitter)
 
-        # Настройка пропорций главного разделителя
-        main_splitter.setSizes([300, 900])  # 300px - левая часть, остальное - правая
-
+        main_splitter.setSizes([300, 900])
         main_layout.addWidget(main_splitter)
-
-        # Подключение сигналов
         self.control_panel.update_signal.connect(self.update_visualizations)
 
     def update_visualizations(self, data):
-        self.plot_widget.update_plots(data)  # Графики без напряжений
+        self.plot_widget.update_plots(data)
         if 'stresses' in data and 'critical_stress' in data and 'forces' in data:
             x, stresses = data['stresses']
             critical_stress = data['critical_stress']

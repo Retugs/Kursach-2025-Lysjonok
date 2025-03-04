@@ -1,178 +1,73 @@
-import sys
 import numpy as np
-from scipy.interpolate import UnivariateSpline  # Для сглаживания
+import matplotlib.pyplot as plt
+from PySide6.QtWidgets import  QMainWindow, QPushButton, QVBoxLayout, QWidget
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.patches import FancyArrowPatch
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                               QPushButton)
-from core.beam_solver import BeamSolver  # Импорт класса решателя
-from core.reverce_solver import compute_forces_and_moments  # Правильный импорт
-from data.random_deflections import generate_random_displacements
+from core.reverce_solver import generate_random_displacements, compute_forces_and_moments
 
 
-class BeamAnalysisGUI(QMainWindow):
+class BeamApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Beam Forces Analyzer")
-        self.setGeometry(100, 100, 1200, 800)
+        self.setWindowTitle("Визуализация балки")
+        self.setGeometry(100, 100, 800, 600)
 
-        # Параметры для инициализации BeamSolver
-        self.length = 10.0  # Длина балки (м)
-        self.E = 2.1e11  # Модуль упругости (Па)
-        self.profile_params = {
-            'I': 1e-6,  # Момент инерции (м^4)
-            'h': 0.1  # Высота сечения (м)
-        }
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout()
+        self.central_widget.setLayout(self.layout)
 
-        # Инициализация решателя
-        self.solver = BeamSolver(self.length, self.E, self.profile_params)
+        self.button = QPushButton("Regenerate")
+        self.button.clicked.connect(self.update_plot)
+        self.layout.addWidget(self.button)
 
-        # Инициализация данных
-        self.displacement_data = None
-        self.results = None
-        self.calculated_deflections = None
-
-        # Создание виджетов
-        self.main_widget = QWidget()
-        self.setCentralWidget(self.main_widget)
-
-        # Основной layout
-        main_layout = QVBoxLayout(self.main_widget)
-
-        # Графики
-        self.figure = Figure()
+        self.figure, self.axs = plt.subplots(2, 1, figsize=(8, 6))
         self.canvas = FigureCanvas(self.figure)
-        main_layout.addWidget(self.canvas)
+        self.layout.addWidget(self.canvas)
 
-        # Кнопка Regenerate
-        self.btn_regenerate = QPushButton("Regenerate")
-        main_layout.addWidget(self.btn_regenerate)
+        self.n = 200
+        self.L = 10.0
+        self.N_modes = 5
+        self.max_amplitude = 0.1
+        self.EI = 1e6
+        self.smoothing_factor = 0.01
+        self.segment_length = 2.0
+        self.force_threshold = 1e3
+        self.moment_threshold = 5e3
 
-        # Подключение сигналов
-        self.btn_regenerate.clicked.connect(self.generate_data)
-
-        # Генерация начальных данных
-        self.generate_data()
-
-    def generate_data(self):
-        """Генерация случайных данных перемещений"""
-        n = 50  # Количество точек
-        L = self.length  # Длина балки
-        self.displacement_data = generate_random_displacements(n, L)
-        self.calculate_forces()
         self.update_plot()
 
-    def calculate_forces(self):
-        """Вычисление сил и моментов"""
-        if self.displacement_data is None:
-            return
+    def update_plot(self):
+        # Очистка графиков
+        for ax in self.axs:
+            ax.clear()
 
-        # Параметры расчета
-        params = {
-            'EI': self.E * self.profile_params['I'],
-            'smoothing_factor': 0.01,
-            'segment_length': 2.0,
-            'force_threshold': 1e3,
-            'moment_threshold': 5e3
-        }
+        z, w = generate_random_displacements(self.n, self.L, self.N_modes, self.max_amplitude)
 
-        # Вычисление сил и моментов
-        self.results = compute_forces_and_moments(
-            self.displacement_data,
-            EI=params['EI'],
-            smoothing_factor=params['smoothing_factor'],
-            segment_length=params['segment_length'],
-            force_threshold=params['force_threshold'],
-            moment_threshold=params['moment_threshold']
+        _, Q, M, q, forces, moments = compute_forces_and_moments(
+            (z, w), self.EI, self.smoothing_factor, self.segment_length, self.force_threshold, self.moment_threshold
         )
 
-        # Конвертация нагрузок для beam_solver
-        loads = []
-        for z, F in self.results[4]:
-            loads.append({'type': 'point', 'value': F, 'position': z})  # Формат для calculate_deflections
-        for z, M in self.results[5]:
-            # Моменты пока не учитываем, так как функция calculate_deflections их не поддерживает
-            pass
+        print("\nНайденные сосредоточенные силы:")
+        if forces:
+            for z_F, F in forces:
+                print(f"  Сила {F:.2f} Н в точке z = {z_F:.2f} м")
+        else:
+            print("  Нет найденных сил.")
 
-        # Расчет перемещений по найденным нагрузкам
-        self.calculated_deflections = self.solver.calculate_deflections(loads)
+        self.axs[0].plot(z, w, label="Перемещения w(z)", color="blue")
+        self.axs[0].set_xlabel("z (м)")
+        self.axs[0].set_ylabel("w (м)")
+        self.axs[0].legend()
+        self.axs[0].grid()
 
-    def update_plot(self):
-        """Обновление графика"""
-        self.figure.clf()
+        self.axs[1].axhline(0, color="black", linewidth=2)
+        for z_F, F in forces:
+            color = "red" if F > 0 else "blue"
+            self.axs[1].arrow(z_F, 0, 0, 0.5 * np.sign(F), head_width=0.2, head_length=0.2, fc=color, ec=color)
+            self.axs[1].text(z_F, 0.6 * np.sign(F), f"{F:.1f} Н", ha="center", color=color)
 
-        if self.displacement_data and self.results and self.calculated_deflections:
-            z, w = self.displacement_data
-            x_calc, w_calc = self.calculated_deflections
-            z_beam, Q, M, q, forces, moments = self.results
-
-            # Создаем два подграфика
-            ax1 = self.figure.add_subplot(211)  # График перемещений
-            ax2 = self.figure.add_subplot(212)  # Визуализация балки
-
-            # Сглаживание calculated deflections
-            spline = UnivariateSpline(x_calc, w_calc, s=0.1)  # Параметр s регулирует степень сглаживания
-            x_smooth = np.linspace(min(x_calc), max(x_calc), 1000)
-            w_smooth = spline(x_smooth)
-
-            # График перемещений
-            ax1.plot(z, w, 'b-', label='Original Deflections')
-            ax1.plot(x_smooth, w_smooth, 'r--', label='Calculated Deflections (Smoothed)')
-            ax1.set_title("Beam Deflections")
-            ax1.set_xlabel("Position (m)")
-            ax1.set_ylabel("Deflection (m)")
-            ax1.grid(True)
-            ax1.legend()
-
-            # Визуализация балки
-            ax2.plot(z_beam, np.zeros_like(z_beam), 'k-', linewidth=2, label='Beam')
-
-            # Отрисовка сил
-            for pos, F in forces:
-                color = 'red' if F > 0 else 'blue'
-                arrow = FancyArrowPatch(
-                    (pos, 0), (pos, F / abs(F) * 0.5),
-                    arrowstyle='->', color=color,
-                    mutation_scale=20, linewidth=2
-                )
-                ax2.add_patch(arrow)
-                ax2.text(pos, F / abs(F) * 0.6, f'{F:.1f} N',
-                         ha='center', color=color)
-
-            # Отрисовка моментов
-            for pos, M_val in moments:
-                if M_val > 0:
-                    # Положительный момент (по часовой стрелке)
-                    ax2.annotate('', xy=(pos, 0.3), xytext=(pos, -0.3),
-                                 arrowprops=dict(
-                                     arrowstyle='->',
-                                     color='green',
-                                     linewidth=2))
-                    ax2.text(pos, 0.35, f'{M_val:.1f} N·m',
-                             ha='center', color='green')
-                else:
-                    # Отрицательный момент (против часовой стрелки)
-                    ax2.annotate('', xy=(pos, -0.3), xytext=(pos, 0.3),
-                                 arrowprops=dict(
-                                     arrowstyle='->',
-                                     color='purple',
-                                     linewidth=2))
-                    ax2.text(pos, -0.35, f'{M_val:.1f} N·m',
-                             ha='center', color='purple')
-
-            # Настройки графика балки
-            ax2.set_title("Beam Visualization")
-            ax2.set_xlabel("Position (m)")
-            ax2.set_ylim(-1, 1)
-            ax2.grid(True)
-            ax2.legend()
+        self.axs[1].set_xlabel("Длина балки (м)")
+        self.axs[1].set_ylabel("Силы")
+        self.axs[1].grid()
 
         self.canvas.draw()
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = BeamAnalysisGUI()
-    window.show()
-    sys.exit(app.exec())

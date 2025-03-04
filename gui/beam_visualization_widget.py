@@ -29,8 +29,8 @@ class BeamVisualizationWidget(QWidget):
         layout.addWidget(self.canvas)
         layout.addWidget(self.smooth_checkbox)
 
-        self.max_load_reference = 10000  # Опорное значение для сил (Н)
-        self.max_moment_reference = 1000  # Опорное значение для моментов (Нм)
+        self.max_load_reference = 10000
+        self.max_moment_reference = 1000
 
         self.last_x = None
         self.last_stresses = None
@@ -47,11 +47,10 @@ class BeamVisualizationWidget(QWidget):
                 self.last_stresses,
                 self.last_critical_stress,
                 self.last_loads,
-                self.last_moments  # Добавляем моменты в вызов
+                self.last_moments
             )
 
     def update_visualization(self, x, stresses, critical_stress, loads, moments):
-        # Сохраняем все параметры включая моменты
         self.last_x = x
         self.last_stresses = stresses
         self.last_critical_stress = critical_stress
@@ -73,7 +72,6 @@ class BeamVisualizationWidget(QWidget):
         self.ax.imshow(img, aspect='auto', cmap=self.cmap,
                       extent=[x[0], x[-1], 0, 1], vmin=vmin, vmax=vmax, interpolation="bilinear")
 
-        # Отрисовка сил
         for load in loads:
             if isinstance(load, dict) and 'position' in load and 'value' in load:
                 position = load['position']
@@ -84,7 +82,6 @@ class BeamVisualizationWidget(QWidget):
                 self.ax.text(position, -0.15, f"{value:.1f} N",
                             ha='center', va='top', color='black', fontsize=8)
 
-        # Отрисовка моментов (новый блок)
         for moment in moments:
             if isinstance(moment, dict) and 'position' in moment and 'value' in moment:
                 position = moment['position']
@@ -95,11 +92,9 @@ class BeamVisualizationWidget(QWidget):
                 self.ax.text(position, -0.25, f"{value:.1f} Nm",
                             ha='center', va='top', color='red', fontsize=8)
 
-        # Настройка области отображения
         self.ax.set_ylim(-0.4, 1)
         self.ax.set_xlim(x[0], x[-1])
 
-        # Обновление цветовой шкалы
         if not hasattr(self, 'cbar'):
             self.cbar = self.figure.colorbar(self.ax.images[0], ax=self.ax,
                                            orientation='horizontal', pad=0.25)

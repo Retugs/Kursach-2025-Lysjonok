@@ -1,91 +1,104 @@
-import sys
 import numpy as np
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-
-# Импорты с учетом файловой структуры
-from data.random_deflections import generate_random_displacements
+from PySide6.QtWidgets import  QMainWindow, QPushButton, QVBoxLayout, QWidget
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from core.reverce_solver import generate_random_displacements, compute_forces_and_moments
 from core.beam_solver import BeamSolver
-from core.reverce_solver import compute_forces_and_moments
+from scipy.interpolate import UnivariateSpline
 
 
-class BeamGUI(QMainWindow):
+
+class BeamApp(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.setWindowTitle("Анализ балки")
-        self.setGeometry(100, 100, 1000, 800)
+        self.setWindowTitle("Визуализация балки")
+        self.setGeometry(100, 100, 800, 900)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout()
+        self.central_widget.setLayout(self.layout)
 
-        self.layout = QVBoxLayout(self.central_widget)
+        self.button = QPushButton("Regenerate")
+        self.button.clicked.connect(self.update_plot)
+        self.layout.addWidget(self.button)
 
-        self.canvas = FigureCanvas(plt.figure(figsize=(8, 6)))
+        self.figure, self.axs = plt.subplots(3, 1, figsize=(8, 10))
+        self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
 
-        self.btn_update = QPushButton("Обновить данные")
-        self.btn_update.clicked.connect(self.update_plot)
-        self.layout.addWidget(self.btn_update)
+        self.n = 500
+        self.L = 10.0
+        self.N_modes = 5
+        self.max_amplitude = 0.1
+        self.E = 1e8
+        self.I = 1e-4
+        self.smoothing_factor = 0.01
+        self.segment_length = 1.0
+        self.force_threshold = 100
+        self.moment_threshold = 50
 
         self.update_plot()
 
     def update_plot(self):
-        self.canvas.figure.clear()
-        ax1 = self.canvas.figure.add_subplot(311)
-        ax2 = self.canvas.figure.add_subplot(312)
-        ax3 = self.canvas.figure.add_subplot(313)
+        # Очистка графиков
+        for ax in self.axs:
+            ax.clear()
 
-        # Генерация случайных перемещений (передаем аргументы n и L)
-        n, L = 100, 10.0  # n - количество точек, L - длина балки
-        z, w_rand = generate_random_displacements(n, L)
+        z, w = generate_random_displacements(self.n, self.L, self.N_modes, self.max_amplitude)
 
-        # Расчет сил и моментов
-        z, Q, M, q, forces, moments = compute_forces_and_moments((z, w_rand))
+        _, Q, M, q, forces, moments = compute_forces_and_moments(
+            (z, w), self.E * self.I, self.smoothing_factor, self.segment_length, self.force_threshold,
+            self.moment_threshold
+        )
 
-        # Задаем параметры балки
-        length = L  # Длина балки совпадает с L
-        E = 2e11  # Модуль Юнга (можешь изменить)
-        profile_params = {"I": 1e-6, "h": 0.2}  # Добавляем h
-        # Создание объекта BeamSolver и расчет восстановленных перемещений
-        beam_solver = BeamSolver(length, E, profile_params)
-        x_rec, w_rec = beam_solver.calculate_deflections(forces)
+        print("\nНайденные сосредоточенные силы:")
+        if forces:
+            for z_F, F in forces:
+                print(f"  Сила {F:.2f} Н в точке z = {z_F:.2f} м")
+        else:
+            print("  Нет найденных сил.")
+        print(f"\nМаксимальные и минимальные значения:")
+        print(f"  max(q) = {max(q):.2f}, min(q) = {min(q):.2f}")
+        print(f"  max(M) = {max(M):.2f}, min(M) = {min(M):.2f}")
 
-        # График исходных перемещений
-        ax1.plot(z, w_rand, label="Исходные перемещения", color="blue")
-        ax1.set_ylabel("w (м)")
-        ax1.legend()
-        ax1.grid()
+        if forces:
+            beam_solver = BeamSolver(self.L, self.E, {'I': self.I, 'h': 0.1})
+            loads = [{'type': 'point', 'value': F, 'position': z_F} for z_F, F in forces]
+            z_restored, w_restored = beam_solver.calculate_deflections(loads)
+            print(f"\nВосстановленные перемещения: max = {max(w_restored):.5f}, min = {min(w_restored):.5f}")
+            smoothing_spline = UnivariateSpline(z_restored, w_restored, s=50)  # s - степень сглаживания
+            w_smoothed = smoothing_spline(z_restored)
 
-        # Визуализация балки с силами и моментами
-        ax2.plot(z, np.zeros_like(z), 'k-', linewidth=2)
-        for zF, F in forces:
-            ax2.arrow(zF, 0, 0, -np.sign(F) * 0.1, head_width=0.2, head_length=0.05, fc='red', ec='red')
-            ax2.text(zF, -np.sign(F) * 0.15, f"{F:.1f} Н", ha="center", fontsize=10, color='red')
+        else:
+            z_restored, w_restored, w_smoothed = np.array([]), np.array([]), np.array([])
 
-        for zM, M_val in moments:
-            ax2.text(zM, 0.1, f"{M_val:.1f} Н·м", ha="center", fontsize=10, color='blue')
+        self.axs[0].plot(z, w, label="Исходные перемещения w(z)", color="blue")
+        self.axs[0].set_xlabel("z (м)")
+        self.axs[0].set_ylabel("w (м)")
+        self.axs[0].legend()
+        self.axs[0].grid()
 
-        ax2.set_ylim(-0.5, 0.5)  # Сделаем больше места для стрелок
-        ax2.set_title("Визуализация балки")
-        ax2.grid()
+        if len(z_restored) > 0:
+            self.axs[1].plot(z_restored, w_smoothed, '--', label="Восстановленные перемещения",
+                             color="red")
+        else:
+            self.axs[1].text(0.5, 0.5, "Нет восстановленных данных", ha='center', va='center',
+                             transform=self.axs[1].transAxes)
 
-        # График восстановленных перемещений
-        ax3.plot(x_rec, w_rec, label="Восстановленные перемещения", color="green")
-        ax3.set_ylabel("w (м)")
-        ax3.legend()
-        ax3.grid()
+        self.axs[1].set_xlabel("z (м)")
+        self.axs[1].set_ylabel("w (м)")
+        self.axs[1].legend()
+        self.axs[1].grid()
 
-        print("Найденные силы:", forces)
-        print("Найденные моменты:", moments)
-        print("Восстановленные перемещения:", w_rec)
+        self.axs[2].axhline(0, color="black", linewidth=2)
+        for z_F, F in forces:
+            color = "red" if F > 0 else "blue"
+            self.axs[2].arrow(z_F, 0, 0, 0.5 * np.sign(F), head_width=0.2, head_length=0.2, fc=color, ec=color)
+            self.axs[2].text(z_F, 0.6 * np.sign(F), f"{F:.1f} Н", ha="center", color=color)
+
+        self.axs[2].set_xlabel("Длина балки (м)")
+        self.axs[2].set_ylabel("Силы")
+        self.axs[2].grid()
 
         self.canvas.draw()
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = BeamGUI()
-    window.show()
-    sys.exit(app.exec())
