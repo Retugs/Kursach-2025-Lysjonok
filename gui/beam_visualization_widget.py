@@ -65,7 +65,7 @@ class BeamVisualizationWidget(QWidget):
 
         # Обработка сглаживания
         smooth = self.smooth_checkbox.isChecked()
-        stresses_smooth = gaussian_filter1d(stresses, 10) if smooth else stresses
+        stresses_smooth = gaussian_filter1d(stresses, 0.1) if smooth else stresses
 
         # Визуализация напряжений
         img = np.abs(stresses_smooth)[np.newaxis, :]

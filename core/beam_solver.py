@@ -10,7 +10,7 @@ class BeamSolver:
         self.I = profile_params['I']
         self.h = profile_params['h']
 
-    def calculate_moments(self, loads, num_points=10000):
+    def calculate_moments(self, loads, num_points=1000):
 
         point_forces = [load for load in loads if load['type'] == 'point']
         moments = [load for load in loads if load['type'] == 'moment']
@@ -48,7 +48,7 @@ class BeamSolver:
         return stresses
 
     def calculate_deflections(self, loads):
-        x = np.linspace(0, self.length, 10000)
+        x = np.linspace(0, self.length, 1000)
         w = np.zeros_like(x)
         for load in loads:
             if load['type'] == 'point':
@@ -61,7 +61,7 @@ class BeamSolver:
                      )
         return x, w
 
-    def calculate_deflections_test(self, loads, num_points=10000):
+    def calculate_deflections_test(self, loads, num_points=1000):
         x, M = self.calculate_moments(loads, num_points=num_points)
 
         M_interp = interp1d(x, M, kind='cubic', fill_value="extrapolate")
@@ -80,7 +80,7 @@ class BeamSolver:
 
         return x, w_corrected
 
-    def calculate_transverse_forces(self, forces, num_points=10000):
+    def calculate_transverse_forces(self, forces, num_points=1000):
         sum_forces = sum(force['value'] for force in forces)
         R_A = -sum_forces / 2
 

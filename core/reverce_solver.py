@@ -22,7 +22,6 @@ def compute_forces_and_moments(displacement_tuple, EI=1.0, smoothing_factor=0.01
     M = -EI * w_pp(z)
     Q = -EI * w_ppp(z)
     q = EI * w_pppp(z)
-
     fine_z = np.linspace(z[0], z[-1], 10 * len(z))
     fine_q = EI * w_pppp(fine_z)
     fine_M = -EI * w_pp(fine_z)

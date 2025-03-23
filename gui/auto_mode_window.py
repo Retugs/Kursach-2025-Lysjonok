@@ -21,7 +21,6 @@ class AutoModeWindow(QWidget):
             "I": 12.3e-6,
             "h": 0.180
         })
-        # BeamSolver
         self.solver = BeamSolver(self.beam_length, E=2e11, profile_params=self.profile_params)
 
         self.num_forces = 1
@@ -144,6 +143,6 @@ class AutoModeWindow(QWidget):
         )
 
     def closeEvent(self, event):
-        """Останавливает симулятор при закрытии окна."""
         self.load_simulator.stop()
         event.accept()
+
