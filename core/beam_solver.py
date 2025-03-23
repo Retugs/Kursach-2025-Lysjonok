@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
@@ -9,6 +8,12 @@ class BeamSolver:
         self.E = E
         self.I = profile_params['I']
         self.h = profile_params['h']
+
+    def cumtrapz_manual(y, x, initial=0):
+        dx = np.diff(x)
+        y_avg = (y[:-1] + y[1:]) / 2.0
+        cum_int = np.concatenate(([initial], np.cumsum(y_avg * dx)))
+        return cum_int
 
     def calculate_moments(self, loads, num_points=1000):
 
@@ -64,15 +69,21 @@ class BeamSolver:
     def calculate_deflections_test(self, loads, num_points=1000):
         x, M = self.calculate_moments(loads, num_points=num_points)
 
+        def cumtrapz_manual(y, x, initial=0):
+            dx = np.diff(x)
+            y_avg = (y[:-1] + y[1:]) / 2.0
+            cum_int = np.concatenate(([initial], np.cumsum(y_avg * dx)))
+            return cum_int
+
         M_interp = interp1d(x, M, kind='cubic', fill_value="extrapolate")
 
         EI = self.E * self.I
 
         f_vals = -M_interp(x) / EI
 
-        dw_dx = cumtrapz(f_vals, x, initial=0)
+        dw_dx = cumtrapz_manual(f_vals, x, initial=0)
 
-        w = cumtrapz(dw_dx, x, initial=0)
+        w = cumtrapz_manual(dw_dx, x, initial=0)
 
         w_L = w[-1]
         correction = np.linspace(0, w_L, num_points)
