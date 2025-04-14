@@ -17,16 +17,16 @@ from numba import jit
 """
 
 class FractalWidget(QWidget):
-    def __init__(self, palette=8, parent=None):
+    def __init__(self, palette=1, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
 
-        self.animation_speed = 0.1
+        self.animation_speed = 0.01
 
         self._width = 800
-        self._height = 600
+        self._height = 800
         self.max_iter = 120
-        self.update_interval = 5
+        self.update_interval = 10
 
         self.zoom = 10.0
         self.angle = 0.0
