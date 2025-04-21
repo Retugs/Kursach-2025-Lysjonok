@@ -7,10 +7,10 @@ E_GLOBAL = 2e8
 I_GLOBAL = 1e-4
 
 # Параметры для высокой точности
-GLOBAL_MAX_ITER = 20000
-GLOBAL_XTOL = 1e-24
-GLOBAL_GTOL = 1e-24
-GLOBAL_BARRIER_TOL = 1e-24
+GLOBAL_MAX_ITER = 2000
+GLOBAL_XTOL = 1e-12
+GLOBAL_GTOL = 1e-12
+GLOBAL_BARRIER_TOL = 1e-12
 
 
 def generate_random_displacements(n, L, N_modes=5, max_amplitude=1.0):

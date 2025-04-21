@@ -205,7 +205,7 @@ class MainGUI(QWidget):
         <b>Число мод:</b> {self.N_modes}, <b>  Амплитуда:</b> {self.max_amplitude:.3f}<br>
         <b>Сил:</b> {N_F}, <b>  Моментов:</b> {N_M}<br>
         <b>Запусков:</b> {self.n_starts}<br>
-        <b>Ошибка:</b> {best_error:.6e}<br>
+        <b>Ошибка:</b> {best_error * 100:.4f}%<br>
         <b>Количество итераций:</b> {best_nit}<br>
         <b>Время (с):</b> {elapsed_time:.2f}
         """
@@ -364,11 +364,15 @@ class MainGUI(QWidget):
 
 
 def main():
+
+
     app = QApplication(sys.argv)
     # qdarktheme.enable()  # при желании включить тёмную тему
     window = MainGUI()
     window.show()
     sys.exit(app.exec())
+
+
 
 
 if __name__ == "__main__":
